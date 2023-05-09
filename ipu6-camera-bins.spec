@@ -7,7 +7,7 @@
 Name:           ipu6-camera-bins
 Summary:        Binary library for Intel IPU6
 Version:        0.0
-Release:        5.%{commitdate}git%{shortcommit}%{?dist}
+Release:        6.%{commitdate}git%{shortcommit}%{?dist}
 License:        Proprietary
 
 Source0: https://github.com/intel/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
@@ -17,6 +17,12 @@ BuildRequires:  chrpath
 BuildRequires:  patchelf
 
 ExclusiveArch:  x86_64
+
+Requires:       ipu6-camera-bins-firmware
+Requires:       ivsc-firmware
+Requires:       gstreamer1-plugins-icamerasrc
+Requires:       v4l2-relayd
+Requires:       intel-ipu6-kmod
 
 # For kmod package
 Provides:       intel-ipu6-kmod-common = %{version}
@@ -95,6 +101,9 @@ install -p -D -m 0644 ipu6ep/lib/firmware/intel/ipu6ep_fw.bin %{buildroot}/usr/l
 
 
 %changelog
+* Tue May 09 2023 Kate Hsuan <hpa@redhat.com> - 0.0-6.20221112git4694ba7
+- Updated dependency settings
+
 * Tue Dec 13 2022 Kate Hsuan <hpa@redhat.com> - 0.0-5.20221112git4694ba7
 - Fix indentation.
 - Remove unnecessary dir macro.
