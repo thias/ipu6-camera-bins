@@ -7,7 +7,7 @@
 Name:           ipu6-camera-bins
 Summary:        Binary library for Intel IPU6
 Version:        0.0
-Release:        6.%{commitdate}git%{shortcommit}%{?dist}
+Release:        7.%{commitdate}git%{shortcommit}%{?dist}
 License:        Proprietary
 
 Source0: https://github.com/intel/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
@@ -101,6 +101,9 @@ install -p -D -m 0644 ipu6ep/lib/firmware/intel/ipu6ep_fw.bin %{buildroot}/usr/l
 
 
 %changelog
+* Thu Aug 03 2023 RPM Fusion Release Engineering <sergiomb@rpmfusion.org> - 0.0-7.20221112git4694ba7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
 * Tue May 09 2023 Kate Hsuan <hpa@redhat.com> - 0.0-6.20221112git4694ba7
 - Updated dependency settings
 
