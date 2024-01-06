@@ -1,13 +1,18 @@
 %global debug_package %{nil}
 
-%global commit 276859fc6de83918a32727d676985ec40f31af2b
-%global commitdate 20230208
+# If you want to install ipu6-camera-hal to build gstreamer1-plugins-icamerasrc
+# for the first time, you will first need to build this package
+# --with bootstrap to avoid the circular depencency.
+%bcond bootstrap 0
+
+%global commit ff21b5556a9048903213c3545745a10fd4bb078a
+%global commitdate 20230925
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 Name:           ipu6-camera-bins
 Summary:        Binary library for Intel IPU6
 Version:        0.0
-Release:        8.%{commitdate}git%{shortcommit}%{?dist}
+Release:        9.%{commitdate}git%{shortcommit}%{?dist}
 License:        Proprietary
 
 Source0: https://github.com/intel/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
@@ -20,9 +25,11 @@ ExclusiveArch:  x86_64
 
 Requires:       ipu6-camera-bins-firmware
 Requires:       ivsc-firmware
+%if %{without bootstrap}
 Requires:       gstreamer1-plugins-icamerasrc
 Requires:       v4l2-relayd
 Requires:       intel-ipu6-kmod
+%endif
 
 # For kmod package
 Provides:       intel-ipu6-kmod-common = %{version}
@@ -48,59 +55,49 @@ This provides the necessary header files for IPU6 development.
 %prep
 
 %setup -q -n %{name}-%{commit}
-for i in ipu6 ipu6ep; do
-  chrpath --delete $i/lib/*.so
-done
+chrpath --delete lib/ipu_*/*.so
 
 %build
 # Nothing to build
 
 %install
-for i in ipu6 ipu6ep; do
-  mkdir -p %{buildroot}%{_includedir}/$i
-  mkdir -p %{buildroot}%{_libdir}/$i
-  cp -pr $i/include/* %{buildroot}%{_includedir}/$i/
-  cp -pr $i/lib/lib* $i/lib/pkgconfig %{buildroot}%{_libdir}/$i
+mkdir -p %{buildroot}%{_includedir}
+mkdir -p %{buildroot}%{_libdir}
+cp -pr include/* %{buildroot}%{_includedir}/
+for i in ipu_adl ipu_mtl ipu_tgl; do
+  cp -pr lib/$i %{buildroot}%{_libdir}/
   patchelf --set-rpath %{_libdir}/$i %{buildroot}%{_libdir}/$i/*.so
-  sed -i \
-    -e "s|libdir=/usr/lib|libdir=%{_libdir}|g" \
-    -e "s|libdir}|libdir}/$i|g" \
-    -e "s|includedir}|includedir}/$i|g" \
-    %{buildroot}%{_libdir}/$i/pkgconfig/*.pc
+  sed -i -e "s|/lib/|/lib64/|g" %{buildroot}%{_libdir}/$i/pkgconfig/*.pc
 done
 
 # IPU6 firmwares
-install -p -D -m 0644 ipu6/lib/firmware/intel/ipu6_fw.bin %{buildroot}/usr/lib/firmware/intel/ipu6_fw.bin
-install -p -D -m 0644 ipu6ep/lib/firmware/intel/ipu6ep_fw.bin %{buildroot}/usr/lib/firmware/intel/ipu6ep_fw.bin
+mkdir -p %{buildroot}/usr/lib/firmware/intel
+install -p -D -m 0644 lib/firmware/intel/*.bin %{buildroot}/usr/lib/firmware/intel/
 
 %files
 %license LICENSE
-%dir %{_libdir}/ipu6
-%dir %{_libdir}/ipu6ep
-%{_libdir}/ipu6/*.so*
-%{_libdir}/ipu6ep/*.so*
+%dir %{_libdir}/ipu_*
+%{_libdir}/ipu_*/*.so*
 
 %files firmware
 %license LICENSE
 %dir /usr/lib/firmware
 %dir /usr/lib/firmware/intel
-/usr/lib/firmware/intel/ipu6_fw.bin
-/usr/lib/firmware/intel/ipu6ep_fw.bin
+/usr/lib/firmware/intel/*.bin
 
 %files devel
-%dir %{_includedir}/ipu6
-%dir %{_includedir}/ipu6ep
-%dir %{_libdir}/ipu6/pkgconfig
-%dir %{_libdir}/ipu6ep/pkgconfig
-%{_includedir}/ipu6/*
-%{_includedir}/ipu6ep/*
-%{_libdir}/ipu6/pkgconfig/*
-%{_libdir}/ipu6ep/pkgconfig/*
-%{_libdir}/ipu6/*.a
-%{_libdir}/ipu6ep/*.a
-
+%dir %{_includedir}/ipu_*
+%dir %{_libdir}/ipu_*
+%{_includedir}/ipu_*/*
+%{_libdir}/ipu_*/pkgconfig/*
+%{_libdir}/ipu_*/*.a
 
 %changelog
+* Mon Oct  9 2023 Matthias Saou <matthias@saou.eu> 0.0-9.20230925gitff21b55
+- Update to commit ff21b5556a9048903213c3545745a10fd4bb078a.
+- Major spec rework because of upstream file structure changes.
+- Allow bootstraping related package builds (ipu6-camera-hal).
+
 * Tue Aug 08 2023 Kate Hsuan <hpa@redhat.com> - 0.0-8.20230208git276859f
 - Updated to commit 276859fc6de83918a32727d676985ec40f31af2b
 
